@@ -47,3 +47,12 @@ PSexec and WMI: SecurityEvent
 | where AccountType == "User" 
 | where Process contains "psexec" or Process contains "wmi" 
 | summarize count() by Account, Process, CommandLine 
+
+
+This query grabs all the signin logs the listed user identities:
+
+let users = datatable(upn:string) ["Acount1", "Account2", "Account3" ]; 
+SigninLogs 
+| where Identity in (users) 
+//| project TimeGenerated,Identity, OperationName, ResultSignature, AppDisplayName, ClientAppUsed, ConditionalAccessStatus, IPAddress, ResourceDisplayName 
+| sort by Identity, TimeGenerated
