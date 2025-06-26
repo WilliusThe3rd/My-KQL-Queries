@@ -1,0 +1,50 @@
+My KQL Queries So Far
+
+Updated Detection: 
+SecurityEvent 
+| where Process contains "powershell.exe" or Process contains "pwsh.exe" 
+| where CommandLine has_any ("-EncodedCommand", "-e", "-w hidden", "-WindowStyle Hidden","Invoke-webRequest", "wget", "curl", "WebClient") 
+| where CommandLine !has "168.63.129.16" 
+| where CommandLine !has "-inputFormat xml" 
+| summarize count = count() by Account, CommandLine 
+
+Improvement 
+SecurityEvent 
+| where Process contains "powershell.exe" or Process contains "pwsh.exe" 
+| where CommandLine has_any ("-EncodedCommand", "-e", "-w hidden", "-WindowStyle Hidden", "Invoke-webRequest", "wget", "curl", "WebClient") 
+| where CommandLine !has "168.63.129.16" 
+| where CommandLine !has "-inputFormat xml" 
+//| summarize count = count() by Account, CommandLine 
+//| summarize by Account 
+| project Account, CommandLine 
+| sort by Account 
+| summarize Commands = make_list(CommandLine) by Account 
+This takes each command and bundles them into a dropdown 
+
+
+Admin Add/Remove Users: 
+
+Updated 
+SecurityEvent 
+| where AccountType == "User" 
+|where EventID in (4720, 4726) 
+| project TimeGenerated, SubjectAccount,SubjectDomainName, SubjectUserName, TargetAccount, TargetDomainName, TargetUserName, EventID, Activity 
+| summarize AffectedAccounts = make_list(TargetAccount) by SubjectAccount, EventID 
+
+ALT: adds the time generated 
+SecurityEvent 
+| where EventID in (4720, 4726) 
+| extend AccountWithTime = strcat(TargetAccount, " @ ", format_datetime(TimeGenerated, 'yyyy-MM-dd HH:mm:ss')) 
+| summarize AffectedAccounts = make_list(AccountWithTime) by SubjectAccount, EventID 
+
+Accessibility exe detection: 
+SecurityEvent 
+| where TimeGenerated > ago(7d) // Adjust time range as needed 
+| where AccountType == "User" 
+| where CommandLine has_any ("sethc.exe", "osk.exe", "narrator.exe", "magnify.exe", "display.exe") 
+| project TimeGenerated, Account, Computer, Activity, NewProcessName, ParentProcessName,SubjectAccount 
+
+PSexec and WMI: SecurityEvent 
+| where AccountType == "User" 
+| where Process contains "psexec" or Process contains "wmi" 
+| summarize count() by Account, Process, CommandLine 
