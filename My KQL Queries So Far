@@ -5,7 +5,6 @@ SecurityEvent
 | where Process contains "powershell.exe" or Process contains "pwsh.exe" 
 | where CommandLine has_any ("-EncodedCommand", "-e", "-w hidden", "-WindowStyle Hidden","Invoke-webRequest", "wget", "curl", "WebClient") 
 | where CommandLine !has "168.63.129.16" 
-| where CommandLine !has "-inputFormat xml" 
 | summarize count = count() by Account, CommandLine 
 
 Improvement 
